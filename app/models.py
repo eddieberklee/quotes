@@ -20,5 +20,5 @@ class Quote(models.Model):
     created_date = models.DateTimeField(auto_now_add=True, default=datetime.datetime.now())
     modified_date = models.DateTimeField(auto_now=True, default=datetime.datetime.now())
     def __unicode__(self):
-        return ''.join([self.quote.text, ' -', self.author.name])
+        return ''.join(['\"', self.quote, '\"', ' -', self.author.name])
 

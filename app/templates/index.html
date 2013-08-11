@@ -2,16 +2,74 @@
 
 {% block content %}
 
+<style>
+    body {
+        font-family: 'Montserrat', sans-serif;
+    }
+    h1,h2,h3,h4,h5,h6 {
+        font-family: 'Montserrat', sans-serif;
+    }
+    .autogrow {
+        position: relative;
+    }
+
+    .quote_form textarea {
+        height: 70px;
+    }
+</style>
+
 <h1>Your Quotes</h1>
 
-<div id="your-quotes">
-    {% for quote in quotes %}
-        {{ quote.quote }}
-        {{ quote.author.name }}
-        {{ quote.comment.text }}
-    {% endfor %}
+<div style="height:10px;"></div>
+
+<div class="row quote_form">
+    <div class="col-lg-6">
+        <form method="post" action="{% url add_quote %}">{% csrf_token %}
+            {{ quote_form.management_form }}
+            <div class="form-group autogrow">
+                {{ quote_form.quote }}
+            </div>
+            <div class="form-group">
+                {{ quote_form.author }}
+            </div>
+            <div class="form-group autogrow">
+                {{ quote_form.comment }}
+            </div>
+        </form>
+    </div>
 </div>
 
+<button type="button" id="quotem" class="btn btn-success" style="font-size:1.4em;padding:6px 26px;">Quotem!</button>
+
+<script>
+    $('.autogrow').each(function() {
+        var $target = $(this).find('.autogrow-target');
+        var fake = $('<div></div>');
+        fake.addClass('autogrow-clone ' + $target.attr('class'));
+        fake.attr('id','');
+        fake.css('position','absolute');
+        fake.css('top','0');
+        fake.css('left','0');
+        fake.css('height','auto');
+        fake.css('word-wrap','break-word'); // this is to wrap when there are no spaces
+        fake.css('width','100%');
+        fake.css('z-index','-99');
+        $(this).append(fake);
+        var $fake = $(this).find('.autogrow-clone');
+    });
+    $('.autogrow .autogrow-target').bind('input propertychange', function() {
+        var $autogrow = $(this).parents('.autogrow');
+        var $clone = $autogrow.find('.autogrow-clone');
+        var target_text = $(this).val();
+        target_text = $(this).val().replace(/\r?\n/g, '<br />');
+        $clone.html(target_text);
+
+        var clone_height = $clone.height();
+        $(this).css('height', clone_height+50);
+    });
+</script>
+
+<!--
 <div class="row quote_form">
     <div class="col-lg-4">
         <div class="form-group">
@@ -32,11 +90,47 @@
         </div>
     </div>
 </div>
+-->
 
-<button type="button" id="quotem" class="btn btn-default">Quotem!</button>
+<div style="height:20px;"></div>
+
+<style>
+    #your-quotes .item {
+        position: relative;
+        margin-bottom: 25px;
+    }
+    #your-quotes {
+        margin-left: 0;
+        margin-right: 0;
+    }
+    .delete-button {
+        color: #c95a60;
+        font-size: 25px;
+        position: absolute;
+        top:   -10px;
+        right: -10px;
+        visibility: hidden;
+        cursor: pointer;
+    }
+    .item:hover .delete-button {
+        visibility: visible;
+    }
+</style>
+
+<div class="row" id="your-quotes">
+    {% for quote in quotes %}
+        <div class="col-lg-5 item" style="background-color:rgba(120,100,150,0.06);" quote_id="{{ quote.id }}">
+            <div class="delete-button"><span class="glyphicon glyphicon-remove"></span></div>
+            <h3>"{{ quote.quote }}"</h1>
+            <h4 style="text-align:right;">- {{ quote.author.name }}</h3>
+            <h5>Comments:</h5>
+            <p>{{ quote.comment.text }}</p>
+        </div>
+    {% endfor %}
+</div>
 
 <script>
-    // using jQuery
+    // Setting up CSRF handling for jQuery AJAX
     function getCookie(name) {
         var cookieValue = null;
         if (document.cookie && document.cookie != '') {
@@ -81,29 +175,60 @@
         }
     });
 
+
+
     $(function() {
-        $("#quotem").click(function() {
-            var quote_text = $('.quote_form .quote_text').val();
-            var quote_author = $('.quote_form .quote_author').val();
-            var quote_comment = $('.quote_form .quote_comment').val();
-            console.log(quote_text);
-            console.log(quote_comment);
-            console.log(quote_author);
+
+        var container = document.querySelector('#your-quotes');
+        var msnry = new Masonry( container, {
+            columnWidth: 50,
+            itemSelector: '.item'
+        });
+
+        $(".delete-button").click(function() {
+            var $item = $(this).parents('.item')
+            var quote_id = $item.attr('quote_id');
+            console.log(quote_id);
             $.ajax({
                 type: 'POST',
-                url: 'add_quote/',
+                url: '{% url delete_quote %}',
                 data: {
-                    'quote_text':quote_text,
-                    'quote_author':quote_author,
-                    'quote_comment':quote_comment,
+                    'quote_id': quote_id,
                 },
                 success: function(data) {
-                    var quote = '"' + quote_text + '" -' + quote_author + '<br>' + quote_comment;
-                    $('body').append('<p>' + quote + '</p>');
                     console.log(data);
+                    $item.hide();
+                },
+                error: function(xhr, text_status, error_thrown) {
+                    console.log(xhr.responseText.slice(0,500));
+                    alert(xhr.responseText.slice(0,1900));
+                    console.log(text_status);
+                    console.log(error_thrown);
                 },
             });
         });
+
+        $("#quotem").click(function() {
+            $.ajax({
+                type: 'POST',
+                url: '{% url add_quote %}',
+                data: $('form', $('.quote_form')).serialize(),
+                success: function(data) {
+                    // data = $.parseJSON(data);
+                    // var quote = '"' + data['quote_text'] + '" -' + data['quote_author'] + '<br>' + data['quote_comment'];
+                    // $('body').append('<p>' + quote + '</p>');
+                    // console.log(data);
+                    window.location.reload();
+                },
+                error: function(xhr, text_status, error_thrown) {
+                    console.log(xhr.responseText.slice(0,500));
+                    alert(xhr.responseText.slice(0,1900));
+                    console.log(text_status);
+                    console.log(error_thrown);
+                },
+            });
+        });
+
     });
 </script>
 
