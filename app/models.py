@@ -4,7 +4,7 @@ import datetime
 # Create your models here.
 
 class Author(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, default="Anonymous", null=True)
     created_date = models.DateTimeField(auto_now_add=True, default=datetime.datetime.now())
     modified_date = models.DateTimeField(auto_now=True, default=datetime.datetime.now())
 
@@ -15,7 +15,7 @@ class Comment(models.Model):
 
 class Quote(models.Model):
     author = models.ForeignKey(Author)
-    comment = models.ForeignKey(Comment)
+    comment = models.ForeignKey(Comment, null=True)
     quote = models.TextField()
     created_date = models.DateTimeField(auto_now_add=True, default=datetime.datetime.now())
     modified_date = models.DateTimeField(auto_now=True, default=datetime.datetime.now())

@@ -32,19 +32,27 @@ def add_quote(request):
             post_comment = cd['comment']
             post_author = cd['author']
 
-            comment = Comment()
-            comment.text = post_comment
-            comment.save()
+            quote = Quote()
+
+            if post_comment:
+                print 'post_comment',post_comment
+                comment = Comment()
+                comment.text = post_comment
+                comment.save()
+                quote.comment = comment
 
             author, created = Author.objects.get_or_create(name__iexact=post_author)
-            author.name = post_author
+            if post_author:
+                author.name = post_author
+            else:
+                author.name = 'Anonymous'
             author.save()
 
-            quote = Quote()
             quote.author = author
-            quote.comment = comment
             quote.quote = post_quote
             quote.save()
+        else:
+            print "Quote_form is not valid!"
         
         data = {
             'quote_text': post_quote,
