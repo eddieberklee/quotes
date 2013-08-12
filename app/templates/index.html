@@ -16,32 +16,76 @@
     .quote_form textarea {
         height: 70px;
     }
+
+    .quote_form .add_comment {
+        color: #999;
+    }
+    .quote_form .add_comment:hover {
+        text-decoration: underline;
+        cursor: pointer;
+    }
+    .quote_form .add_comment:active {
+        position: relative;
+        top: 1px;
+    }
+    .comment-row {
+        display: none;
+    }
 </style>
 
 <h1>Your Quotes</h1>
 
 <div style="height:10px;"></div>
 
-<div class="row quote_form">
-    <div class="col-lg-6">
-        <form method="post" action="{% url add_quote %}">{% csrf_token %}
-            {{ quote_form.management_form }}
-            <div class="form-group autogrow">
-                {{ quote_form.quote }}
+<div class="quote_form">
+    <form method="post" action="{% url add_quote %}">{% csrf_token %}
+        {{ quote_form.management_form }}
+        <div class="row">
+            <div class="col-lg-5">
+                <div class="form-group autogrow">
+                    {{ quote_form.quote }}
+                </div>
             </div>
-            <div class="form-group">
-                {{ quote_form.author }}
+        </div>
+        <div class="row">
+            <div class="col-lg-2 add_comment" active="0">
+                <span class="glyphicon glyphicon-plus" style="font-size:12px;"></span> Comment
             </div>
-            <div class="form-group autogrow">
-                {{ quote_form.comment }}
+            <div class="col-lg-offset-1 col-lg-2">
+                <div class="form-group">
+                    {{ quote_form.author }}
+                </div>
             </div>
-        </form>
+        </div>
+        <div class="row comment-row">
+            <div class="col-lg-5">
+                <div class="form-group autogrow">
+                    {{ quote_form.comment }}
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="row">
+    <div class="col-lg-offset-3 col-lg-2">
+        <button type="button" id="quotem" class="btn btn-success" style="width:100%;">Quotem!</button>
     </div>
 </div>
 
-<button type="button" id="quotem" class="btn btn-success" style="font-size:1.4em;padding:6px 26px;">Quotem!</button>
-
 <script>
+    $('.quote_form .add_comment').click(function() {
+        if ( $(this).attr('class').indexOf('active') >= 0 ) {
+            $(this).css('text-decoration','none');
+            $(this).parents('.quote_form').find('.comment-row').hide();
+            $(this).removeClass('active');
+        } else {
+            $(this).css('text-decoration','line-through');
+            $(this).parents('.quote_form').find('.comment-row').show();
+            $(this).addClass('active');
+        }
+    });
+
     $('.autogrow').each(function() {
         var $target = $(this).find('.autogrow-target');
         var fake = $('<div></div>');
@@ -123,8 +167,10 @@
             <div class="delete-button"><span class="glyphicon glyphicon-remove"></span></div>
             <h3>"{{ quote.quote }}"</h1>
             <h4 style="text-align:right;">- {{ quote.author.name }}</h3>
-            <h5>Comments:</h5>
-            <p>{{ quote.comment.text }}</p>
+            {% if quote.comment %}
+                <h5>comments:</h5>
+                <p>{{ quote.comment.text }}</p>
+            {% endif %}
         </div>
     {% endfor %}
 </div>
