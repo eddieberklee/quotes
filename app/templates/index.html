@@ -9,6 +9,9 @@
     h1,h2,h3,h4,h5,h6 {
         font-family: 'Montserrat', sans-serif;
     }
+    .clear {
+        clear: both;
+    }
     .autogrow {
         position: relative;
     }
@@ -32,14 +35,75 @@
         display: none;
     }
 </style>
+<style>
+    #your-quotes .item {
+        position: relative;
+        margin-bottom: 25px;
+    }
+    #your-quotes {
+        margin-left: 0;
+        margin-right: 0;
+    }
+    .quote-container {
+    }
+    .author-container {
+    }
+    .edit-button, .delete-button {
+        position: absolute;
+        cursor: pointer;
+        -webkit-transition: all 0.2s;
+        -moz-transition:    all 0.2s;
+        transition:         all 0.2s;
+        opacity: 0;
+    }
+    .edit-button {
+        color: #3498db;
+        font-size: 22px;
+        top: 18px;
+        right: -10px;
+    }
+    .edit-button:hover {
+        color: #54b8fb;
+        top: 17px;
+    }
+    .edit-button:active {
+        top: 18px;
+    }
+    .item:hover .edit-button {
+        opacity: 1;
+    }
+    .delete-button {
+        color: #c95a60;
+        font-size: 25px;
+        top:   -10px;
+        right: -10px;
+    }
+    .delete-button:hover {
+        color: #d96a70;
+        top: -11px;
+    }
+    .delete-button:active {
+        top: -10px;
+    }
+    .item:hover .delete-button {
+        opacity: 1;
+    }
+</style>
 
 <h1>Your Quotes</h1>
 
 <div style="height:10px;"></div>
 
+<div class="quote_template" style="display:none;">
+    {{ quote_form.quote_id }}
+    {{ quote_form.quote }}
+    {{ quote_form.author }}
+    {{ quote_form.comment }}
+</div>
+
 <div class="quote_form">
     <form method="post" action="{% url add_quote %}">{% csrf_token %}
-        {{ quote_form.management_form }}
+        {{ quote_form.quote_id }}
         <div class="row">
             <div class="col-lg-5">
                 <div class="form-group autogrow">
@@ -113,60 +177,17 @@
     });
 </script>
 
-<!--
-<div class="row quote_form">
-    <div class="col-lg-4">
-        <div class="form-group">
-            <label>Quote:</label>
-            <textarea rows="4" class="form-control quote_text" name="quote_text"></textarea>
-        </div>
-    </div>
-    <div class="col-lg-2">
-        <div class="form-group">
-            <label>Author:</label>
-            <input type="text" class="form-control quote_author" name="quote_author">
-        </div>
-    </div>
-    <div class="col-lg-4">
-        <div class="form-group">
-            <label>Comment:</label>
-            <textarea rows="4" class="form-control quote_comment" name="quote_comment"></textarea>
-        </div>
-    </div>
-</div>
--->
-
 <div style="height:20px;"></div>
-
-<style>
-    #your-quotes .item {
-        position: relative;
-        margin-bottom: 25px;
-    }
-    #your-quotes {
-        margin-left: 0;
-        margin-right: 0;
-    }
-    .delete-button {
-        color: #c95a60;
-        font-size: 25px;
-        position: absolute;
-        top:   -10px;
-        right: -10px;
-        visibility: hidden;
-        cursor: pointer;
-    }
-    .item:hover .delete-button {
-        visibility: visible;
-    }
-</style>
 
 <div class="row" id="your-quotes">
     {% for quote in quotes %}
         <div class="col-lg-5 item" style="background-color:rgba(120,100,150,0.06);" quote_id="{{ quote.id }}">
             <div class="delete-button"><span class="glyphicon glyphicon-remove"></span></div>
-            <h3>"{{ quote.quote }}"</h1>
-            <h4 style="text-align:right;">- {{ quote.author.name }}</h3>
+            <div class="edit-button"><span class="glyphicon glyphicon-pencil"></span></div>
+            <h3 class="quote-container">
+                "{{ quote.quote }}"
+            </h3>
+            <h4 class="author-container" style="text-align:right;">- {{ quote.author.name }}</h4>
             {% if quote.comment %}
                 <h5>comments:</h5>
                 <p>{{ quote.comment.text }}</p>
@@ -229,6 +250,40 @@
         var msnry = new Masonry( container, {
             columnWidth: 50,
             itemSelector: '.item'
+        });
+
+        $(".edit-button").click(function() {
+            // replace text with input boxes
+            // add a save button
+            // ajax call to submit an edit
+            var $item = $(this).parents('.item')
+            var quote_id = $item.attr('quote_id');
+            var $quote_container = $(".quote-container", $item);
+            var quote_container_height = $quote_container.css('height');
+            var quote_text = $quote_container.text().trim();
+            console.log(quote_text);
+            var $author_container = $(".author-container", $item);
+            var author = $author_container.text().trim();
+            author = author.slice(2,author.length); // to account for the "- "
+            console.log(author);
+
+            // these appends should be replaced with specific placement of the form elements
+            var $quote_template = $(".quote_template");
+            var $quote_template_id = $quote_template.find('.quote_id').clone();
+            var $quote_template_quote = $quote_template.find('.quote_quote').clone();
+            var $quote_template_author = $quote_template.find('.quote_author').clone();
+            var $quote_template_comment = $quote_template.find('.quote_comment').clone();
+
+            $quote_template_quote.val(quote_text);
+            $quote_template_quote.css('height',quote_container_height);
+            $quote_container.html($quote_template_quote);
+
+            $quote_template_author.val(author);
+            $quote_template_author.css('width','50%');
+            $quote_template_author.css('float','right');
+            $quote_template_author.css('text-align','right');
+            $author_container.html($quote_template_author);
+            $author_container.append('<div class="clear"></div>');
         });
 
         $(".delete-button").click(function() {
