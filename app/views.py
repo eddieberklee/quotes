@@ -70,7 +70,16 @@ def delete_quote(request):
         if quote.exists():
             quote.delete()
             return HttpResponse(simplejson.dumps({'success':'true'}))
+    else:
+        raise Http404
 
-
-
-
+def edit_quote(request):
+    if request.method == 'POST':
+        quote_id = request.POST.get('quote_id')
+        print 'quote_id', quote_id
+        quote = Quote.objects.filter(id=quote_id)
+        if quote.exists():
+            pass
+            # validate and if has_changed then pass it POST to update form
+    else:
+        raise Http404

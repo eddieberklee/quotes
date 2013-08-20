@@ -8,6 +8,7 @@
     }
     h1,h2,h3,h4,h5,h6 {
         font-family: 'Montserrat', sans-serif;
+        margin: 0;
     }
     .clear {
         clear: both;
@@ -36,9 +37,11 @@
     }
 </style>
 <style>
-    #your-quotes .item {
+    .item {
         position: relative;
         margin-bottom: 25px;
+        padding-top: 15px;
+        padding-bottom: 15px;
     }
     #your-quotes {
         margin-left: 0;
@@ -88,6 +91,24 @@
     .item:hover .delete-button {
         opacity: 1;
     }
+
+    .left-quote, .right-quote {
+        position: absolute;
+        font-size: 2em;
+        font-weight: normal;
+    }
+    .left-quote {
+        top: 0;
+        left: 0;
+    }
+    .right-quote {
+        right: 0;
+        bottom: 0;
+    }
+
+    /* stretching the buttons to 100% width - manipulate width with col class */
+    #quotem { width: 100%; }
+    .save-button, .cancel-button { width: 100%; }
 </style>
 
 <h1>Your Quotes</h1>
@@ -99,6 +120,8 @@
     {{ quote_form.quote }}
     {{ quote_form.author }}
     {{ quote_form.comment }}
+    <input type="submit" class="save-button btn btn-success" value="Save"/>
+    <input type="button" class="cancel-button btn btn-warning" value="Cancel"/>
 </div>
 
 <div class="quote_form">
@@ -133,7 +156,7 @@
 
 <div class="row">
     <div class="col-lg-offset-3 col-lg-2">
-        <button type="button" id="quotem" class="btn btn-success" style="width:100%;">Quotem!</button>
+        <button type="button" id="quotem" class="btn btn-success">Quotem!</button>
     </div>
 </div>
 
@@ -155,13 +178,15 @@
         var fake = $('<div></div>');
         fake.addClass('autogrow-clone ' + $target.attr('class'));
         fake.attr('id','');
-        fake.css('position','absolute');
-        fake.css('top','0');
-        fake.css('left','0');
-        fake.css('height','auto');
-        fake.css('word-wrap','break-word'); // this is to wrap when there are no spaces
-        fake.css('width','100%');
-        fake.css('z-index','-99');
+        fake.css({
+            'position': 'absolute',
+            'top': '0',
+            'left': '0',
+            'height': 'auto',
+            'word-wrap': 'break-word',
+            'width': '100%',
+            'z-index': '-99',
+        });
         $(this).append(fake);
         var $fake = $(this).find('.autogrow-clone');
     });
@@ -181,18 +206,37 @@
 
 <div class="row" id="your-quotes">
     {% for quote in quotes %}
-        <div class="col-lg-5 item" style="background-color:rgba(120,100,150,0.06);" quote_id="{{ quote.id }}">
-            <div class="delete-button"><span class="glyphicon glyphicon-remove"></span></div>
-            <div class="edit-button"><span class="glyphicon glyphicon-pencil"></span></div>
-            <h3 class="quote-container">
-                "{{ quote.quote }}"
-            </h3>
-            <h4 class="author-container" style="text-align:right;">- {{ quote.author.name }}</h4>
-            {% if quote.comment %}
-                <h5>comments:</h5>
-                <p>{{ quote.comment.text }}</p>
-            {% endif %}
-        </div>
+        <div class="item col-lg-5" style="background-color:rgba(120,100,150,0.06);" quote_id="{{ quote.id }}">
+            <form method="post" action="{% url edit_quote %}">{% csrf_token %}
+                <div class="delete-button"><span class="glyphicon glyphicon-remove"></span></div>
+                <div class="edit-button"><span class="glyphicon glyphicon-pencil"></span></div>
+                <h3 class="quote-container">
+                    "{{ quote.quote }}"
+                </h3>
+
+                <div style="height:10px;"></div>
+
+                <div class="row">
+                    <div class="col-lg-offset-8 col-lg-4">
+                        <h4 class="author-container" style="text-align:right;">- {{ quote.author.name }}</h4>
+                    </div>
+                </div>
+
+                {% if quote.comment %}
+                    <h5>comments:</h5>
+                    <p>{{ quote.comment.text }}</p>
+                {% endif %}
+
+                <div style="height:10px;"></div>
+
+                <div class="row">
+                    <div class="save-container col-lg-offset-4 col-lg-4" style="">
+                    </div>
+                    <div class="cancel-container col-lg-4" style="">
+                    </div>
+                </div>
+            </form>
+        </div><!-- /.item -->
     {% endfor %}
 </div>
 
@@ -253,37 +297,43 @@
         });
 
         $(".edit-button").click(function() {
-            // replace text with input boxes
-            // add a save button
-            // ajax call to submit an edit
+            // TODO: ajax call to submit an edit
             var $item = $(this).parents('.item')
             var quote_id = $item.attr('quote_id');
+
             var $quote_container = $(".quote-container", $item);
+            var $author_container = $(".author-container", $item);
+            var $save_container = $(".save-container", $item);
+            var $cancel_container = $(".cancel-container", $item);
+
             var quote_container_height = $quote_container.css('height');
             var quote_text = $quote_container.text().trim();
-            console.log(quote_text);
-            var $author_container = $(".author-container", $item);
             var author = $author_container.text().trim();
             author = author.slice(2,author.length); // to account for the "- "
-            console.log(author);
 
-            // these appends should be replaced with specific placement of the form elements
-            var $quote_template = $(".quote_template");
-            var $quote_template_id = $quote_template.find('.quote_id').clone();
-            var $quote_template_quote = $quote_template.find('.quote_quote').clone();
-            var $quote_template_author = $quote_template.find('.quote_author').clone();
-            var $quote_template_comment = $quote_template.find('.quote_comment').clone();
+            var $quote_template = $(".quote_template").clone();
+            var $quote_template_id = $quote_template.find('.quote_id');
+            var $quote_template_quote = $quote_template.find('.quote_quote');
+            var $quote_template_author = $quote_template.find('.quote_author');
+            var $quote_template_comment = $quote_template.find('.quote_comment');
+            var $save_button = $quote_template.find('.save-button');
+            var $cancel_button = $quote_template.find('.cancel-button');
 
-            $quote_template_quote.val(quote_text);
+            $quote_template_quote.val(quote_text.slice(1,quote_text.length-1));
             $quote_template_quote.css('height',quote_container_height);
-            $quote_container.html($quote_template_quote);
 
             $quote_template_author.val(author);
-            $quote_template_author.css('width','50%');
             $quote_template_author.css('float','right');
             $quote_template_author.css('text-align','right');
+
+            $quote_container.html($quote_template_quote);
             $author_container.html($quote_template_author);
+            $save_container.html($save_button);
+            $cancel_container.html($cancel_button);
+
             $author_container.append('<div class="clear"></div>');
+
+            // TODO: remove the edit button until the edit is canceled/submitted
         });
 
         $(".delete-button").click(function() {

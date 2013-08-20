@@ -6,5 +6,3 @@ class QuoteForm(forms.Form):
     quote = forms.CharField( widget=forms.Textarea(attrs={'class':'form-control autogrow-target quote_quote', 'placeholder':'Quote'}) )
     comment = forms.CharField( widget=forms.Textarea(attrs={'class':'form-control autogrow-target quote_comment', 'placeholder':'Comment'}), required=False )
 
-
-
