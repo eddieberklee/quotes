@@ -75,11 +75,18 @@ def delete_quote(request):
 
 def edit_quote(request):
     if request.method == 'POST':
-        quote_id = request.POST.get('quote_id')
-        print 'quote_id', quote_id
-        quote = Quote.objects.filter(id=quote_id)
-        if quote.exists():
-            pass
-            # validate and if has_changed then pass it POST to update form
+        quote_form = QuoteForm(request.POST.copy(), prefix='quote')
+        print request.POST
+        if quote_form.is_valid() and quote_form.has_changed():
+            print request.POST
+            quote_id = request.POST.get('quote_id')
+            print 'quote_id', quote_id
+            quote = Quote.objects.filter(id=quote_id)
+            request_post = ''
+            for key,value in request.POST.items():
+                request_post += key
+                request_post += value
+            return HttpResponse(request_post)
+        return HttpResponse('form not valid or changed')
     else:
         raise Http404
