@@ -1,7 +1,7 @@
 # Create your views here.
 import simplejson
 
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render
 from app.forms import QuoteForm
 from app.models import Quote, Author, Comment
@@ -75,18 +75,17 @@ def delete_quote(request):
 
 def edit_quote(request):
     if request.method == 'POST':
+        quote_id = request.POST.get('quote-quote_id')
+        quote = Quote.objects.get(id=quote_id)
         quote_form = QuoteForm(request.POST.copy(), prefix='quote')
-        print request.POST
+
         if quote_form.is_valid() and quote_form.has_changed():
-            print request.POST
-            quote_id = request.POST.get('quote_id')
-            print 'quote_id', quote_id
-            quote = Quote.objects.filter(id=quote_id)
-            request_post = ''
-            for key,value in request.POST.items():
-                request_post += key
-                request_post += value
-            return HttpResponse(request_post)
+            quote.author.name = quote_form.cleaned_data['author']
+            quote.quote = quote_form.cleaned_data['quote']
+            quote.author.save()
+            quote.save()
+            return HttpResponseRedirect("/quotes/")
+            return HttpResponse(request.POST)
         return HttpResponse('form not valid or changed')
     else:
         raise Http404

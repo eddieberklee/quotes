@@ -67,10 +67,6 @@
     }
     .edit-button:hover {
         color: #54b8fb;
-        top: 17px;
-    }
-    .edit-button:active {
-        top: 18px;
     }
     .item:hover .edit-button {
         opacity: 1;
@@ -83,10 +79,6 @@
     }
     .delete-button:hover {
         color: #d96a70;
-        top: -11px;
-    }
-    .delete-button:active {
-        top: -10px;
     }
     .item:hover .delete-button {
         opacity: 1;
@@ -108,7 +100,7 @@
 
     /* stretching the buttons to 100% width - manipulate width with col class */
     #quotem { width: 100%; }
-    .save-button, .cancel-button { width: 100%; }
+    .edit-save-button, .edit-cancel-button { width: 100%; }
 </style>
 
 <h1>Your Quotes</h1>
@@ -120,8 +112,8 @@
     {{ quote_form.quote }}
     {{ quote_form.author }}
     {{ quote_form.comment }}
-    <input type="submit" class="save-button btn btn-success" value="Save"/>
-    <input type="button" class="cancel-button btn btn-warning" value="Cancel"/>
+    <input type="submit" class="edit-save-button btn btn-success" value="Save"/>
+    <input type="button" class="edit-cancel-button btn btn-warning" value="Cancel"/>
 </div>
 
 <div class="quote_form">
@@ -240,6 +232,7 @@
     {% endfor %}
 </div>
 
+<script src="{{ STATIC_URL }}js/quote-form.js"></script>
 <script>
     // Setting up CSRF handling for jQuery AJAX
     function getCookie(name) {
@@ -294,70 +287,6 @@
         var msnry = new Masonry( container, {
             columnWidth: 50,
             itemSelector: '.item'
-        });
-
-        $(".edit-button").click(function() {
-            // TODO: ajax call to submit an edit
-            var $item = $(this).parents('.item')
-            var quote_id = $item.attr('quote_id');
-
-            var $quote_container = $(".quote-container", $item);
-            var $author_container = $(".author-container", $item);
-            var $save_container = $(".save-container", $item);
-            var $cancel_container = $(".cancel-container", $item);
-
-            var quote_container_height = $quote_container.css('height');
-            var quote_text = $quote_container.text().trim();
-            var author = $author_container.text().trim();
-            author = author.slice(2,author.length); // to account for the "- "
-
-            var $quote_template = $(".quote_template").clone();
-            var $quote_template_id = $quote_template.find('.quote_id');
-            var $quote_template_quote = $quote_template.find('.quote_quote');
-            var $quote_template_author = $quote_template.find('.quote_author');
-            var $quote_template_comment = $quote_template.find('.quote_comment');
-            var $save_button = $quote_template.find('.save-button');
-            var $cancel_button = $quote_template.find('.cancel-button');
-
-
-            $quote_template_quote.val(quote_text.slice(1,quote_text.length-1));
-            $quote_template_quote.css('height',quote_container_height);
-
-            $quote_template_author.val(author);
-            $quote_template_author.css('float','right');
-            $quote_template_author.css('text-align','right');
-
-            $quote_container.html($quote_template_quote);
-            $author_container.html($quote_template_author);
-            $save_container.html($save_button);
-            $cancel_container.html($cancel_button);
-
-            $author_container.append('<div class="clear"></div>');
-
-            // TODO: remove the edit button until the edit is canceled/submitted
-        });
-
-        $(".delete-button").click(function() {
-            var $item = $(this).parents('.item')
-            var quote_id = $item.attr('quote_id');
-            console.log(quote_id);
-            $.ajax({
-                type: 'POST',
-                url: '{% url delete_quote %}',
-                data: {
-                    'quote_id': quote_id,
-                },
-                success: function(data) {
-                    console.log(data);
-                    $item.hide();
-                },
-                error: function(xhr, text_status, error_thrown) {
-                    console.log(xhr.responseText.slice(0,500));
-                    alert(xhr.responseText.slice(0,1900));
-                    console.log(text_status);
-                    console.log(error_thrown);
-                },
-            });
         });
 
         $("#quotem").click(function() {
